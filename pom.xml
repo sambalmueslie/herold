@@ -29,9 +29,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git://github.com/simpligility/ossrh-demo.git</connection>
-		<developerConnection>scm:git:ssh://github.com:simpligility/ossrh-demo.git</developerConnection>
-		<url>http://github.com/simpligility/ossrh-demo/tree/master</url>
+		<connection>scm:git:git://github.com/sambalmueslie/herold.git</connection>
+		<developerConnection>scm:git:ssh://github.com:sambalmueslie/herold.git</developerConnection>
+		<url>https://github.com/sambalmueslie/herold</url>
 	</scm>
 
 
