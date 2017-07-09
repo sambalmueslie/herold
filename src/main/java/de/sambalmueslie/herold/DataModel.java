@@ -39,6 +39,11 @@ public interface DataModel<T extends DataModelElement> {
 	Collection<T> getAll();
 
 	/**
+	 * @return <code>true</code> if model is empty, otherwise <code>false</code>.
+	 */
+	boolean isEmpty();
+
+	/**
 	 * Register a {@link DataModelChangeListener}.
 	 *
 	 * @param listener
@@ -66,6 +71,11 @@ public interface DataModel<T extends DataModelElement> {
 	 * Remove all elements.
 	 */
 	void removeAll();
+
+	/**
+	 * @return the size of elements in the model.
+	 */
+	int size();
 
 	/**
 	 * @return create a {@link Stream} of all elements.
