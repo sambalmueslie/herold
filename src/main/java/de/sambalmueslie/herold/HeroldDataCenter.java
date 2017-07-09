@@ -7,7 +7,7 @@ public interface HeroldDataCenter {
 	 * @param elementType
 	 *            the type
 	 */
-	<T extends DataModelElement> void createModel(Class<T> elementType);
+	<T extends DataModelElement> DataModel<T> createModel(Class<T> elementType);
 
 	/**
 	 * Remove all model in the data center.
@@ -24,7 +24,7 @@ public interface HeroldDataCenter {
 
 	/**
 	 * Remove a specified model for an element type.
-	 * 
+	 *
 	 * @param elementType
 	 *            the type
 	 * @param model
