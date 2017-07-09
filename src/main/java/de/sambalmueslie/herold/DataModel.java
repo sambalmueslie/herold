@@ -1,5 +1,6 @@
 package de.sambalmueslie.herold;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -35,7 +36,12 @@ public interface DataModel<T extends DataModelElement> {
 	/**
 	 * @return a {@link List} of all elements.
 	 */
-	List<T> getAll();
+	Collection<T> getAll();
+
+	/**
+	 * @return <code>true</code> if model is empty, otherwise <code>false</code>.
+	 */
+	boolean isEmpty();
 
 	/**
 	 * Register a {@link DataModelChangeListener}.
@@ -67,6 +73,11 @@ public interface DataModel<T extends DataModelElement> {
 	void removeAll();
 
 	/**
+	 * @return the size of elements in the model.
+	 */
+	int size();
+
+	/**
 	 * @return create a {@link Stream} of all elements.
 	 */
 	Stream<T> stream();
@@ -81,7 +92,7 @@ public interface DataModel<T extends DataModelElement> {
 
 	/**
 	 * Update the element.
-	 * 
+	 *
 	 * @param element
 	 *            the element
 	 */
