@@ -1,5 +1,6 @@
 package de.sambalmueslie.herold;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -35,7 +36,7 @@ public interface DataModel<T extends DataModelElement> {
 	/**
 	 * @return a {@link List} of all elements.
 	 */
-	List<T> getAll();
+	Collection<T> getAll();
 
 	/**
 	 * Register a {@link DataModelChangeListener}.
@@ -81,7 +82,7 @@ public interface DataModel<T extends DataModelElement> {
 
 	/**
 	 * Update the element.
-	 * 
+	 *
 	 * @param element
 	 *            the element
 	 */
