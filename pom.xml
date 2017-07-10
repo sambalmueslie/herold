@@ -14,6 +14,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<skipGPG>false</skipGPG>
 	</properties>
 
 	<developers>
@@ -120,6 +121,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>1.6</version>
+				<configuration>
+					<skip>${skipGPG}</skip>
+				</configuration>
 				<executions>
 					<execution>
 						<id>sign-artifacts</id>
