@@ -1,4 +1,4 @@
-package de.sambalmueslie.herold.model;
+package de.sambalmueslie.herold.model.element;
 
 import de.sambalmueslie.herold.BaseDataModelElement;
 

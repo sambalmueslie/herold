@@ -32,7 +32,7 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	}
 
-	ModelInstance(Model<T> model) {
+	ModelInstance(LocalModel<T> model) {
 		this.model = model;
 		instanceId = UUID.randomUUID().getLeastSignificantBits();
 
@@ -140,6 +140,6 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	private final List<DataModelChangeListener<T>> changeListener = new LinkedList<>();
 	private final long instanceId;
-	private final Model<T> model;
+	private final LocalModel<T> model;
 
 }

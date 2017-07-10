@@ -15,6 +15,7 @@ import org.junit.Test;
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.HeroldDataCenter;
+import de.sambalmueslie.herold.model.element.TestElement;
 
 public class DataCenterTest {
 

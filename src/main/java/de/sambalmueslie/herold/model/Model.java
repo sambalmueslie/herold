@@ -17,29 +17,28 @@ import org.apache.logging.log4j.Logger;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 
-class Model<T extends DataModelElement> {
+class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	private static Logger logger = LogManager.getLogger(Model.class);
 
-	boolean contains(long elementId) {
+	@Override
+	public boolean contains(long elementId) {
 		return data.containsKey(elementId);
 	}
 
-	void dispose() {
-		data.clear();
-		listeners.clear();
-	}
-
-	Optional<T> get(long elementId) {
+	@Override
+	public Optional<T> get(long elementId) {
 		final T element = data.get(elementId);
 		return Optional.ofNullable(element);
 	}
 
-	Collection<T> getAll() {
+	@Override
+	public Collection<T> getAll() {
 		return Collections.unmodifiableCollection(data.values());
 	}
 
-	void handleLocalAdd(long instanceId, T element) {
+	@Override
+	public void handleLocalAdd(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local add null element");
 			return;
@@ -58,7 +57,8 @@ class Model<T extends DataModelElement> {
 
 	}
 
-	void handleLocalRemove(long instanceId, long elementId) {
+	@Override
+	public void handleLocalRemove(long instanceId, long elementId) {
 		final T element = data.remove(elementId);
 
 		if (element == null) return;
@@ -67,7 +67,8 @@ class Model<T extends DataModelElement> {
 		notifyListeners(instanceId, l -> l.handleElementRemoved(element));
 	}
 
-	void handleLocalRemove(long instanceId, T element) {
+	@Override
+	public void handleLocalRemove(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local remove null element");
 			return;
@@ -75,12 +76,14 @@ class Model<T extends DataModelElement> {
 		handleLocalRemove(instanceId, element.getId());
 	}
 
-	void handleLocalRemoveAll(long instanceId) {
+	@Override
+	public void handleLocalRemoveAll(long instanceId) {
 		final Set<Long> copy = new LinkedHashSet<>(data.keySet());
 		copy.forEach(id -> handleLocalRemove(instanceId, id));
 	}
 
-	void handleLocalUpdate(long instanceId, T element) {
+	@Override
+	public void handleLocalUpdate(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local update null element");
 			return;
@@ -101,26 +104,36 @@ class Model<T extends DataModelElement> {
 		notifyListeners(instanceId, l -> l.handleElementChanged(element));
 	}
 
-	boolean isEmpty() {
+	@Override
+	public boolean isEmpty() {
 		return data.isEmpty();
 	}
 
-	void register(long instanceId, DataModelChangeListener<T> listener) {
+	@Override
+	public void register(long instanceId, DataModelChangeListener<T> listener) {
 		if (listener == null) return;
 
 		listeners.put(instanceId, listener);
 	}
 
-	int size() {
+	@Override
+	public int size() {
 		return data.size();
 	}
 
-	Stream<T> stream() {
+	@Override
+	public Stream<T> stream() {
 		return data.values().stream();
 	}
 
-	void unregister(long instanceId) {
+	@Override
+	public void unregister(long instanceId) {
 		listeners.remove(instanceId);
+	}
+
+	void dispose() {
+		data.clear();
+		listeners.clear();
 	}
 
 	private void notifyListeners(long instanceId, Consumer<DataModelChangeListener<T>> message) {
@@ -128,7 +141,6 @@ class Model<T extends DataModelElement> {
 	}
 
 	private final Map<Long, T> data = new LinkedHashMap<>();
-
 	private final Map<Long, DataModelChangeListener<T>> listeners = new LinkedHashMap<>();
 
 }
