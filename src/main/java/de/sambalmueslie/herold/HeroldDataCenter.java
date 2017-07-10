@@ -10,6 +10,16 @@ public interface HeroldDataCenter {
 	<T extends DataModelElement> DataModel<T> createModel(Class<T> elementType);
 
 	/**
+	 * Create a new model for a specified type for a defined operator.
+	 *
+	 * @param elementType
+	 *            the type
+	 * @param operatorId
+	 *            the operator id
+	 */
+	<T extends DataModelElement> DataModel<T> createModel(Class<T> elementType, String operatorId);
+
+	/**
 	 * Remove all model in the data center.
 	 */
 	void removeAllModel();

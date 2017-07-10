@@ -14,14 +14,33 @@ import de.sambalmueslie.herold.HeroldDataCenter;
  * The implementation of the {@link HeroldDataCenter}.
  */
 class DataCenter implements HeroldDataCenter {
+
 	private static Logger logger = LogManager.getLogger(DataCenter.class);
+
+	/**
+	 * Constructor.
+	 *
+	 * @param operatorId
+	 *            {@link #globalOperatorId}
+	 */
+	public DataCenter(String operatorId) {
+		this.globalOperatorId = operatorId;
+	}
 
 	@Override
 	public <T extends DataModelElement> DataModel<T> createModel(Class<T> elementType) {
 		logger.debug("Create new model of type {}", elementType);
 
 		final ModelController<T> controller = getController(elementType);
-		return controller.createNewInstance();
+		return controller.createNewInstance(globalOperatorId);
+	}
+
+	@Override
+	public <T extends DataModelElement> DataModel<T> createModel(Class<T> elementType, String operatorId) {
+		logger.debug("Create new model of type {} for operator {}", elementType, operatorId);
+
+		final ModelController<T> controller = getController(elementType);
+		return controller.createNewInstance(operatorId);
 	}
 
 	@Override
@@ -69,6 +88,9 @@ class DataCenter implements HeroldDataCenter {
 		}
 		return controller;
 	}
+
+	/** the operator id. */
+	private final String globalOperatorId;
 
 	/** the models by type. */
 	private final Map<Class<?>, ModelController<?>> models = new LinkedHashMap<>();

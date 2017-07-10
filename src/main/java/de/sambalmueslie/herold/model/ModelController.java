@@ -16,14 +16,15 @@ class ModelController<T extends DataModelElement> {
 		this.elementType = elementType;
 	}
 
-	DataModel<T> createNewInstance() {
+	DataModel<T> createNewInstance(String operatorId) {
 		logger.debug("Create new instance for type {}", elementType);
 
 		if (model == null) {
 			createModel();
 		}
 
-		final ModelInstance<T> instance = new ModelInstance<>(model);
+		final ModelAccessController<T> accessController = new ModelAccessController<>(operatorId, model, elementType);
+		final ModelInstance<T> instance = new ModelInstance<>(accessController);
 		instances.put(instance.getId(), instance);
 		return instance;
 	}
