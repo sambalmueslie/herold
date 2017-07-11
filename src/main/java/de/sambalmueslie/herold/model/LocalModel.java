@@ -11,6 +11,8 @@ interface LocalModel<T extends DataModelElement> {
 
 	boolean contains(long elementId);
 
+	Optional<T> create();
+
 	Optional<T> get(long elementId);
 
 	Collection<T> getAll();

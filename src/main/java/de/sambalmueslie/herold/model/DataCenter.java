@@ -1,7 +1,9 @@
 package de.sambalmueslie.herold.model;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.HeroldDataCenter;
+import de.sambalmueslie.herold.annotations.ImplementationType;
 
 /**
  * The implementation of the {@link HeroldDataCenter}.
@@ -28,18 +31,22 @@ class DataCenter implements HeroldDataCenter {
 	}
 
 	@Override
-	public <T extends DataModelElement> DataModel<T> createModel(Class<T> elementType) {
-		logger.debug("Create new model of type {}", elementType);
-
-		final ModelController<T> controller = getController(elementType);
-		return controller.createNewInstance(globalOperatorId);
+	public <T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType) {
+		return createModel(elementType, globalOperatorId);
 	}
 
 	@Override
-	public <T extends DataModelElement> DataModel<T> createModel(Class<T> elementType, String operatorId) {
+	public <T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType, String operatorId) {
 		logger.debug("Create new model of type {} for operator {}", elementType, operatorId);
 
-		final ModelController<T> controller = getController(elementType);
+		final Class<? extends T> implType = getImplementationType(elementType);
+
+		if (!isValid(elementType, implType)) {
+			logger.error("Cannot create model of invalid type {}", elementType);
+			return Optional.empty();
+		}
+
+		final ModelController<T> controller = getController(elementType, implType);
 		return controller.createNewInstance(operatorId);
 	}
 
@@ -49,6 +56,7 @@ class DataCenter implements HeroldDataCenter {
 
 		models.values().forEach(ModelController::dispose);
 		models.clear();
+		implTypeCache.clear();
 	}
 
 	@Override
@@ -56,12 +64,13 @@ class DataCenter implements HeroldDataCenter {
 		if (!models.containsKey(elementType)) return;
 
 		logger.debug("Create remove all model of type {}", elementType);
-
-		final ModelController<T> controller = getController(elementType);
+		final Class<? extends T> implType = getImplementationType(elementType);
+		final ModelController<T> controller = getController(elementType, implType);
 		controller.removeAll();
 
 		controller.dispose();
-		models.remove(elementType);
+		models.remove(implType);
+		implTypeCache.remove(elementType);
 	}
 
 	@Override
@@ -70,27 +79,71 @@ class DataCenter implements HeroldDataCenter {
 
 		logger.debug("Create remove model of type {}", elementType);
 
-		final ModelController<T> controller = getController(elementType);
+		final Class<? extends T> implType = getImplementationType(elementType);
+		final ModelController<T> controller = getController(elementType, implType);
 		controller.remove(model);
 
 		if (controller.isUnused()) {
 			controller.dispose();
-			models.remove(elementType);
+			models.remove(implType);
+			implTypeCache.remove(elementType);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataModelElement> ModelController<T> getController(Class<T> elementType) {
-		ModelController<T> controller = (ModelController<T>) models.get(elementType);
+	private <T extends DataModelElement> ModelController<T> getController(Class<T> elementType, Class<? extends T> implType) {
+		ModelController<T> controller = (ModelController<T>) models.get(implType);
 		if (controller == null) {
-			controller = new ModelController<>(elementType);
-			models.put(elementType, controller);
+			controller = new ModelController<>(elementType, implType);
+			models.put(implType, controller);
 		}
 		return controller;
 	}
 
+	@SuppressWarnings("unchecked")
+	private <T extends DataModelElement> Class<? extends T> getImplementationType(Class<T> elementType) {
+		if (implTypeCache.containsKey(elementType)) return (Class<? extends T>) implTypeCache.get(elementType);
+
+		final ImplementationType annotation = elementType.getAnnotation(ImplementationType.class);
+
+		final Class<T> implType = annotation != null ? (Class<T>) annotation.value() : elementType;
+		implTypeCache.put(elementType, implType);
+		return implType;
+	}
+
+	private <T extends DataModelElement> boolean isValid(Class<T> elementType, Class<? extends T> implType) {
+		if (implType.isInterface()) {
+			logger.error("Element type {} must define annotation {} or be an instanceable type.", elementType, ImplementationType.class);
+			return false;
+		}
+
+		try {
+			if (implType.getConstructor() == null) {
+				logger.error("Element type {} must define default constructor.", elementType);
+				return false;
+			}
+		} catch (NoSuchMethodException | SecurityException e) {
+			logger.error("Element type {} must define accesible default constructor.", elementType);
+			return false;
+		}
+
+		if (!elementType.isAssignableFrom(implType)) {
+			logger.error("Implementation type {} must implement {}.", implType, elementType);
+			return false;
+		}
+
+		if (!DataModelElement.class.isAssignableFrom(implType)) {
+			logger.error("Element type {} must implement {}.", elementType, DataModelElement.class);
+			return false;
+		}
+
+		return true;
+	}
+
 	/** the operator id. */
 	private final String globalOperatorId;
+
+	private final Map<Class<?>, Class<?>> implTypeCache = new HashMap<>();
 
 	/** the models by type. */
 	private final Map<Class<?>, ModelController<?>> models = new LinkedHashMap<>();

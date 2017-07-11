@@ -16,16 +16,34 @@ import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.HeroldDataCenter;
 import de.sambalmueslie.herold.model.element.TestElement;
+import de.sambalmueslie.herold.model.element.TestElementInterface;
 
 public class DataCenterTest {
+
+	@Test
+	public void testInterfaceInstance() {
+		final HeroldDataCenter dataCenter = HeroldFactory.createDataCenter();
+		final DataModel<TestElement> m1 = dataCenter.createModel(TestElement.class).get();
+		final DataModel<TestElementInterface> m2 = dataCenter.createModel(TestElementInterface.class).get();
+
+		final TestElement element = new TestElement(1234, "Hello World");
+		m1.add(element);
+
+		final Optional<TestElementInterface> result = m2.get(element.getId());
+
+		assertTrue(result.isPresent());
+		assertEquals(element.getId(), result.get().getId());
+		assertEquals(element.getContent(), result.get().getContent());
+
+	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testMultipleModel() {
 		final HeroldDataCenter dataCenter = HeroldFactory.createDataCenter();
 
-		final DataModel<TestElement> sender = dataCenter.createModel(TestElement.class);
-		final DataModel<TestElement> receiver = dataCenter.createModel(TestElement.class);
+		final DataModel<TestElement> sender = dataCenter.createModel(TestElement.class).get();
+		final DataModel<TestElement> receiver = dataCenter.createModel(TestElement.class).get();
 
 		final DataModelChangeListener<TestElement> listener = mock(DataModelChangeListener.class);
 		receiver.register(listener);
@@ -55,14 +73,14 @@ public class DataCenterTest {
 		sender.add(element);
 		assertEquals(1, sender.size());
 
-		final DataModel<TestElement> newReceiver = dataCenter.createModel(TestElement.class);
+		final DataModel<TestElement> newReceiver = dataCenter.createModel(TestElement.class).get();
 		assertEquals(1, newReceiver.size());
 	}
 
 	@Test
 	public void testSingleEmptyModel() {
 		final HeroldDataCenter dataCenter = HeroldFactory.createDataCenter();
-		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class);
+		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class).get();
 
 		assertEquals(0, model.size());
 		assertTrue(model.isEmpty());
@@ -80,7 +98,7 @@ public class DataCenterTest {
 	public void testSingleInstance() {
 		final HeroldDataCenter dataCenter = HeroldFactory.createDataCenter();
 
-		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class);
+		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class).get();
 
 		final TestElement e1 = new TestElement(1234, "Hello World");
 		model.add(e1);
@@ -136,7 +154,7 @@ public class DataCenterTest {
 	public void testSingleInvalidParameter() {
 		final HeroldDataCenter dataCenter = HeroldFactory.createDataCenter();
 
-		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class);
+		final DataModel<TestElement> model = dataCenter.createModel(TestElement.class).get();
 
 		model.register(null);
 		model.unregister(null);

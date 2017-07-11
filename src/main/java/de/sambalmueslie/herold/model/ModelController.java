@@ -2,6 +2,7 @@ package de.sambalmueslie.herold.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,11 +13,12 @@ import de.sambalmueslie.herold.DataModelElement;
 class ModelController<T extends DataModelElement> {
 	private static Logger logger = LogManager.getLogger(ModelController.class);
 
-	ModelController(Class<T> elementType) {
+	ModelController(Class<T> elementType, Class<? extends T> implType) {
 		this.elementType = elementType;
+		this.implType = implType;
 	}
 
-	DataModel<T> createNewInstance(String operatorId) {
+	Optional<DataModel<T>> createNewInstance(String operatorId) {
 		logger.debug("Create new instance for type {}", elementType);
 
 		if (model == null) {
@@ -26,7 +28,7 @@ class ModelController<T extends DataModelElement> {
 		final ModelAccessController<T> accessController = new ModelAccessController<>(operatorId, model, elementType);
 		final ModelInstance<T> instance = new ModelInstance<>(accessController);
 		instances.put(instance.getId(), instance);
-		return instance;
+		return Optional.of(instance);
 	}
 
 	void dispose() {
@@ -68,10 +70,11 @@ class ModelController<T extends DataModelElement> {
 	}
 
 	private void createModel() {
-		model = new Model<>();
+		model = new Model<>(implType);
 	}
 
 	private final Class<T> elementType;
+	private final Class<? extends T> implType;
 	private final Map<Long, ModelInstance<T>> instances = new LinkedHashMap<>();
 	private Model<T> model;
 

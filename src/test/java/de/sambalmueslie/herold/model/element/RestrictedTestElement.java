@@ -7,6 +7,11 @@ import de.sambalmueslie.herold.annotations.AllowedWriter;
 @AllowedReader("reader")
 @AllowedWriter("writer")
 public class RestrictedTestElement extends BaseDataModelElement {
+
+	public RestrictedTestElement() {
+		// intentionally left empty
+	}
+
 	public RestrictedTestElement(long id, String content) {
 		setId(id);
 		this.content = content;
