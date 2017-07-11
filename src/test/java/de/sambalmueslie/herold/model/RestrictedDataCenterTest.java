@@ -20,8 +20,8 @@ public class RestrictedDataCenterTest {
 	public void setup() {
 		dataCenter = HeroldFactory.createDataCenter("writer");
 
-		writer = dataCenter.createModel(RestrictedTestElement.class);
-		reader = dataCenter.createModel(RestrictedTestElement.class, "reader");
+		writer = dataCenter.createModel(RestrictedTestElement.class).get();
+		reader = dataCenter.createModel(RestrictedTestElement.class, "reader").get();
 	}
 
 	@After

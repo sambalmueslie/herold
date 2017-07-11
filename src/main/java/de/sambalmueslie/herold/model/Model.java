@@ -21,9 +21,24 @@ class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	private static Logger logger = LogManager.getLogger(Model.class);
 
+	Model(Class<? extends T> implType) {
+		this.implType = implType;
+	}
+
 	@Override
 	public boolean contains(long elementId) {
 		return data.containsKey(elementId);
+	}
+
+	@Override
+	public Optional<T> create() {
+		try {
+			final T instance = implType.newInstance();
+			return Optional.of(instance);
+		} catch (InstantiationException | IllegalAccessException e) {
+			logger.error("Cannot create instance of type{}", implType, e);
+			return Optional.empty();
+		}
 	}
 
 	@Override
@@ -141,6 +156,9 @@ class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	private final Map<Long, T> data = new LinkedHashMap<>();
+	/** the implementation type. */
+	private final Class<? extends T> implType;
+
 	private final Map<Long, DataModelChangeListener<T>> listeners = new LinkedHashMap<>();
 
 }

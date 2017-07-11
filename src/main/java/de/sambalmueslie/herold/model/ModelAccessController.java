@@ -31,6 +31,11 @@ class ModelAccessController<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	@Override
+	public Optional<T> create() {
+		return model.create();
+	}
+
+	@Override
 	public Optional<T> get(long elementId) {
 		if (isReadRestricted()) throw new ReadAccessException(operatorId, elementType, "Cannot read");
 		return model.get(elementId);

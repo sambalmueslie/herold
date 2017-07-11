@@ -1,5 +1,7 @@
 package de.sambalmueslie.herold;
 
+import java.util.Optional;
+
 public interface HeroldDataCenter {
 	/**
 	 * Create a new model for a specified type.
@@ -7,7 +9,7 @@ public interface HeroldDataCenter {
 	 * @param elementType
 	 *            the type
 	 */
-	<T extends DataModelElement> DataModel<T> createModel(Class<T> elementType);
+	<T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType);
 
 	/**
 	 * Create a new model for a specified type for a defined operator.
@@ -17,7 +19,7 @@ public interface HeroldDataCenter {
 	 * @param operatorId
 	 *            the operator id
 	 */
-	<T extends DataModelElement> DataModel<T> createModel(Class<T> elementType, String operatorId);
+	<T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType, String operatorId);
 
 	/**
 	 * Remove all model in the data center.
