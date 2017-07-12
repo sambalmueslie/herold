@@ -7,53 +7,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.annotations.AllowedReader;
 import de.sambalmueslie.herold.annotations.AllowedWriter;
 import de.sambalmueslie.herold.exceptions.ReadAccessException;
 import de.sambalmueslie.herold.exceptions.WriteAccessException;
 import de.sambalmueslie.herold.model.LocalModel;
-import de.sambalmueslie.herold.model.Metadata;
+import de.sambalmueslie.herold.model.LocalModelFilter;
 import de.sambalmueslie.herold.util.AnnotationSpy;
 
-public class AccessController<T extends DataModelElement> implements LocalModel<T> {
+public class AccessController<T extends DataModelElement> extends LocalModelFilter<T> {
 
 	public AccessController(String operatorId, LocalModel<T> model) {
+		super(model);
 		this.operatorId = operatorId;
-		this.model = model;
 
 		setup();
-	}
-
-	@Override
-	public boolean contains(long elementId) {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.contains(elementId);
-	}
-
-	@Override
-	public void dispose() {
-		allowedReaders.clear();
-		allowedWriters.clear();
-		model.dispose();
-	}
-
-	@Override
-	public Optional<T> get(long elementId) {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.get(elementId);
-	}
-
-	@Override
-	public Collection<T> getAll() {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.getAll();
-	}
-
-	@Override
-	public Metadata<T> getMetadata() {
-		return model.getMetadata();
 	}
 
 	@Override
@@ -61,7 +30,38 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot add element");
 
-		model.add(instanceId, element);
+		getNext().add(instanceId, element);
+	}
+
+	@Override
+	public boolean contains(long elementId) {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().contains(elementId);
+	}
+
+	@Override
+	public void dispose() {
+		allowedReaders.clear();
+		allowedWriters.clear();
+		getNext().dispose();
+	}
+
+	@Override
+	public Optional<T> get(long elementId) {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().get(elementId);
+	}
+
+	@Override
+	public Collection<T> getAll() {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().getAll();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().isEmpty();
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove element");
 
-		model.remove(instanceId, elementId);
+		getNext().remove(instanceId, elementId);
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove element");
 
-		model.remove(instanceId, element);
+		getNext().remove(instanceId, element);
 	}
 
 	@Override
@@ -85,7 +85,19 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove all elements");
 
-		model.removeAll(instanceId);
+		getNext().removeAll(instanceId);
+	}
+
+	@Override
+	public int size() {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().size();
+	}
+
+	@Override
+	public Stream<T> stream() {
+		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
+		return getNext().stream();
 	}
 
 	@Override
@@ -93,35 +105,7 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot update element");
 
-		model.update(instanceId, element);
-	}
-
-	@Override
-	public boolean isEmpty() {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.isEmpty();
-	}
-
-	@Override
-	public void register(long instanceId, DataModelChangeListener<T> listener) {
-		model.register(instanceId, listener);
-	}
-
-	@Override
-	public int size() {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.size();
-	}
-
-	@Override
-	public Stream<T> stream() {
-		if (isReadRestricted()) throw new ReadAccessException(operatorId, getElementType(), "Cannot read");
-		return model.stream();
-	}
-
-	@Override
-	public void unregister(long instanceId) {
-		model.unregister(instanceId);
+		getNext().update(instanceId, element);
 	}
 
 	Class<T> getElementType() {
@@ -155,6 +139,5 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 
 	private Set<String> allowedReaders;
 	private Set<String> allowedWriters;
-	private final LocalModel<T> model;
 	private final String operatorId;
 }

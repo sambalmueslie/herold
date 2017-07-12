@@ -1,8 +1,5 @@
 package de.sambalmueslie.herold.model.change;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -10,91 +7,60 @@ import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.annotations.ChangeListener;
 import de.sambalmueslie.herold.model.LocalModel;
-import de.sambalmueslie.herold.model.Metadata;
+import de.sambalmueslie.herold.model.LocalModelFilter;
 import de.sambalmueslie.herold.util.AnnotationSpy;
 
-public class ChangeDetector<T extends DataModelElement> implements LocalModel<T> {
+public class ChangeDetector<T extends DataModelElement> extends LocalModelFilter<T> {
 
 	public ChangeDetector(LocalModel<T> model) {
+		super(model);
+
 		this.model = model;
+		cache = new Cache<>();
 
 		setup();
 	}
 
 	@Override
-	public boolean contains(long elementId) {
-		return model.contains(elementId);
+	public void add(long instanceId, T element) {
+		if (element == null) return;
+
+		model.add(instanceId, element);
+		cache.update(element);
 	}
 
 	@Override
 	public void dispose() {
-		specificListener.clear();
 		model.dispose();
-	}
-
-	@Override
-	public Optional<T> get(long elementId) {
-		return model.get(elementId);
-	}
-
-	@Override
-	public Collection<T> getAll() {
-		return model.getAll();
-	}
-
-	@Override
-	public Metadata<T> getMetadata() {
-		return model.getMetadata();
-	}
-
-	@Override
-	public void add(long instanceId, T element) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void remove(long instanceId, long elementId) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void remove(long instanceId, T element) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void removeAll(long instanceId) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void update(long instanceId, T element) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return model.isEmpty();
+		cache.clear();
 	}
 
 	@Override
 	public void register(long instanceId, DataModelChangeListener<T> listener) {
 		if (isSpecificListener(listener)) {
-
+			final SpecificListenerWrapper<T> wrapper = new SpecificListenerWrapper<>(specificListenerType, listener, cache);
+			model.register(instanceId, wrapper);
+		} else {
+			model.register(instanceId, listener);
 		}
-
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
-	public int size() {
-		return model.size();
+	public void remove(long instanceId, long elementId) {
+		cache.remove(elementId);
+		model.remove(instanceId, elementId);
+	}
+
+	@Override
+	public void remove(long instanceId, T element) {
+		if (element == null) return;
+		remove(instanceId, element.getId());
+	}
+
+	@Override
+	public void removeAll(long instanceId) {
+		cache.clear();
+		model.removeAll(instanceId);
 	}
 
 	@Override
@@ -103,8 +69,14 @@ public class ChangeDetector<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	@Override
-	public void unregister(long instanceId) {
-		model.unregister(instanceId);
+	public void update(long instanceId, T element) {
+		if (element == null) return;
+
+		// TODO merge with existing element
+		// TODO ignore updates without a change
+
+		model.update(instanceId, element);
+		cache.update(element);
 	}
 
 	private boolean isSpecificListener(DataModelChangeListener<T> listener) {
@@ -116,9 +88,10 @@ public class ChangeDetector<T extends DataModelElement> implements LocalModel<T>
 		if (result.isPresent()) {
 			specificListenerType = result.get().value();
 		}
+
 	}
 
+	private final Cache<T> cache;
 	private final LocalModel<T> model;
-	private final Map<Long, DataModelChangeListener<T>> specificListener = new LinkedHashMap<>();
 	private Class<?> specificListenerType;
 }

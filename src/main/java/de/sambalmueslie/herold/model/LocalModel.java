@@ -9,6 +9,8 @@ import de.sambalmueslie.herold.DataModelElement;
 
 public interface LocalModel<T extends DataModelElement> {
 
+	void add(long instanceId, T element);
+
 	boolean contains(long elementId);
 
 	void dispose();
@@ -19,7 +21,9 @@ public interface LocalModel<T extends DataModelElement> {
 
 	Metadata<T> getMetadata();
 
-	void add(long instanceId, T element);
+	boolean isEmpty();
+
+	void register(long instanceId, DataModelChangeListener<T> listener);
 
 	void remove(long instanceId, long elementId);
 
@@ -27,15 +31,13 @@ public interface LocalModel<T extends DataModelElement> {
 
 	void removeAll(long instanceId);
 
-	void update(long instanceId, T element);
-
-	boolean isEmpty();
-
-	void register(long instanceId, DataModelChangeListener<T> listener);
-
 	int size();
 
 	Stream<T> stream();
 
-	void unregister(long instanceId);
+	void unregister(long instanceId, DataModelChangeListener<T> listener);
+
+	void unregisterAll(long instanceId);
+
+	void update(long instanceId, T element);
 }

@@ -1,8 +1,6 @@
 package de.sambalmueslie.herold.model.instance;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -14,30 +12,9 @@ import de.sambalmueslie.herold.model.LocalModel;
 
 public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
-	private class ModelChangesForwarder implements DataModelChangeListener<T> {
-
-		@Override
-		public void handleElementAdded(T element) {
-			changeListener.forEach(l -> l.handleElementAdded(element));
-		}
-
-		@Override
-		public void handleElementChanged(T element) {
-			changeListener.forEach(l -> l.handleElementChanged(element));
-		}
-
-		@Override
-		public void handleElementRemoved(T element) {
-			changeListener.forEach(l -> l.handleElementRemoved(element));
-		}
-
-	}
-
 	public ModelInstance(LocalModel<T> model) {
 		this.model = model;
 		instanceId = UUID.randomUUID().getLeastSignificantBits();
-
-		model.register(instanceId, new ModelChangesForwarder());
 	}
 
 	@Override
@@ -51,8 +28,7 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 	}
 
 	public void dispose() {
-		model.unregister(instanceId);
-		changeListener.clear();
+		model.unregisterAll(instanceId);
 	}
 
 	@Override
@@ -94,12 +70,7 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void register(DataModelChangeListener<T> listener) {
-		if (listener == null) return;
-		if (changeListener.contains(listener)) return;
-
-		changeListener.add(listener);
-
-		model.stream().forEach(listener::handleElementAdded);
+		model.register(instanceId, listener);
 	}
 
 	@Override
@@ -129,9 +100,7 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void unregister(DataModelChangeListener<T> listener) {
-		if (listener == null) return;
-
-		changeListener.remove(listener);
+		model.unregister(instanceId, listener);
 	}
 
 	@Override
@@ -139,7 +108,6 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 		model.update(instanceId, element);
 	}
 
-	private final List<DataModelChangeListener<T>> changeListener = new LinkedList<>();
 	private final long instanceId;
 	private final LocalModel<T> model;
 

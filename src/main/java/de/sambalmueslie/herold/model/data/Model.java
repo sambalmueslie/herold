@@ -5,10 +5,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +23,28 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	public Model(Metadata<T> metadata) {
 		this.metadata = metadata;
+
+		listenerMgr = new ListenerMgr<>();
+	}
+
+	@Override
+	public void add(long instanceId, T element) {
+		if (element == null) {
+			logger.error("Cannot local add null element");
+			return;
+		}
+
+		final long elementId = element.getId();
+		if (data.containsKey(elementId)) {
+			update(instanceId, element);
+			return;
+		}
+
+		logger.debug("Localy add new element {}", element);
+		data.put(elementId, element);
+
+		listenerMgr.notifyElementAdded(instanceId, element);
+
 	}
 
 	@Override
@@ -35,7 +55,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	@Override
 	public void dispose() {
 		data.clear();
-		listeners.clear();
+		listenerMgr.dispose();
 	}
 
 	@Override
@@ -55,23 +75,13 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
-	public void add(long instanceId, T element) {
-		if (element == null) {
-			logger.error("Cannot local add null element");
-			return;
-		}
+	public boolean isEmpty() {
+		return data.isEmpty();
+	}
 
-		final long elementId = element.getId();
-		if (data.containsKey(elementId)) {
-			update(instanceId, element);
-			return;
-		}
-
-		logger.debug("Localy add new element {}", element);
-		data.put(elementId, element);
-
-		notifyListeners(instanceId, l -> l.handleElementAdded(element));
-
+	@Override
+	public void register(long instanceId, DataModelChangeListener<T> listener) {
+		listenerMgr.register(instanceId, listener);
 	}
 
 	@Override
@@ -81,7 +91,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 		if (element == null) return;
 
 		logger.debug("Localy remove element {}", element);
-		notifyListeners(instanceId, l -> l.handleElementRemoved(element));
+		listenerMgr.notifyElementRemoved(instanceId, element);
 	}
 
 	@Override
@@ -100,6 +110,26 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
+	public int size() {
+		return data.size();
+	}
+
+	@Override
+	public Stream<T> stream() {
+		return data.values().stream();
+	}
+
+	@Override
+	public void unregister(long instanceId, DataModelChangeListener<T> listener) {
+		listenerMgr.unregister(instanceId, listener);
+	}
+
+	@Override
+	public void unregisterAll(long instanceId) {
+		listenerMgr.unregisterAll(instanceId);
+	}
+
+	@Override
 	public void update(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local update null element");
@@ -112,48 +142,14 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 			return;
 		}
 
-		// TODO merge with existing element
-		// TODO ignore updates without a change
-
 		logger.debug("Localy update element {}", element);
 		data.put(elementId, element);
 
-		notifyListeners(instanceId, l -> l.handleElementChanged(element));
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return data.isEmpty();
-	}
-
-	@Override
-	public void register(long instanceId, DataModelChangeListener<T> listener) {
-		if (listener == null) return;
-
-		listeners.put(instanceId, listener);
-	}
-
-	@Override
-	public int size() {
-		return data.size();
-	}
-
-	@Override
-	public Stream<T> stream() {
-		return data.values().stream();
-	}
-
-	@Override
-	public void unregister(long instanceId) {
-		listeners.remove(instanceId);
-	}
-
-	private void notifyListeners(long instanceId, Consumer<DataModelChangeListener<T>> message) {
-		listeners.entrySet().stream().filter(e -> e.getKey() != instanceId).map(Entry::getValue).forEach(message);
+		listenerMgr.notifyElementUpdated(instanceId, element);
 	}
 
 	private final Map<Long, T> data = new LinkedHashMap<>();
-	private final Map<Long, DataModelChangeListener<T>> listeners = new LinkedHashMap<>();
+	private final ListenerMgr<T> listenerMgr;
 	private final Metadata<T> metadata;
 
 }
