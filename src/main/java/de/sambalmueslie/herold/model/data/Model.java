@@ -55,7 +55,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
-	public void handleLocalAdd(long instanceId, T element) {
+	public void add(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local add null element");
 			return;
@@ -63,7 +63,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 		final long elementId = element.getId();
 		if (data.containsKey(elementId)) {
-			handleLocalUpdate(instanceId, element);
+			update(instanceId, element);
 			return;
 		}
 
@@ -75,7 +75,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, long elementId) {
+	public void remove(long instanceId, long elementId) {
 		final T element = data.remove(elementId);
 
 		if (element == null) return;
@@ -85,22 +85,22 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, T element) {
+	public void remove(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local remove null element");
 			return;
 		}
-		handleLocalRemove(instanceId, element.getId());
+		remove(instanceId, element.getId());
 	}
 
 	@Override
-	public void handleLocalRemoveAll(long instanceId) {
+	public void removeAll(long instanceId) {
 		final Set<Long> copy = new LinkedHashSet<>(data.keySet());
-		copy.forEach(id -> handleLocalRemove(instanceId, id));
+		copy.forEach(id -> remove(instanceId, id));
 	}
 
 	@Override
-	public void handleLocalUpdate(long instanceId, T element) {
+	public void update(long instanceId, T element) {
 		if (element == null) {
 			logger.error("Cannot local update null element");
 			return;
@@ -108,7 +108,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 		final long elementId = element.getId();
 		if (!data.containsKey(elementId)) {
-			handleLocalAdd(instanceId, element);
+			add(instanceId, element);
 			return;
 		}
 

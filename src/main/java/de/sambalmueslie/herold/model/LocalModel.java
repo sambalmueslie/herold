@@ -19,15 +19,15 @@ public interface LocalModel<T extends DataModelElement> {
 
 	Metadata<T> getMetadata();
 
-	void handleLocalAdd(long instanceId, T element);
+	void add(long instanceId, T element);
 
-	void handleLocalRemove(long instanceId, long elementId);
+	void remove(long instanceId, long elementId);
 
-	void handleLocalRemove(long instanceId, T element);
+	void remove(long instanceId, T element);
 
-	void handleLocalRemoveAll(long instanceId);
+	void removeAll(long instanceId);
 
-	void handleLocalUpdate(long instanceId, T element);
+	void update(long instanceId, T element);
 
 	boolean isEmpty();
 

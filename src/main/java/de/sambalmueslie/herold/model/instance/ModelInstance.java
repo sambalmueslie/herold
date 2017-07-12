@@ -42,7 +42,7 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void add(T element) {
-		model.handleLocalAdd(instanceId, element);
+		model.add(instanceId, element);
 	}
 
 	@Override
@@ -104,17 +104,17 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void remove(long elementId) {
-		model.handleLocalRemove(instanceId, elementId);
+		model.remove(instanceId, elementId);
 	}
 
 	@Override
 	public void remove(T element) {
-		model.handleLocalRemove(instanceId, element);
+		model.remove(instanceId, element);
 	}
 
 	@Override
 	public void removeAll() {
-		model.handleLocalRemoveAll(instanceId);
+		model.removeAll(instanceId);
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void update(T element) {
-		model.handleLocalUpdate(instanceId, element);
+		model.update(instanceId, element);
 	}
 
 	private final List<DataModelChangeListener<T>> changeListener = new LinkedList<>();

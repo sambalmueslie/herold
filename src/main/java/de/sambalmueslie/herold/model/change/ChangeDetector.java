@@ -48,31 +48,31 @@ public class ChangeDetector<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	@Override
-	public void handleLocalAdd(long instanceId, T element) {
+	public void add(long instanceId, T element) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, long elementId) {
+	public void remove(long instanceId, long elementId) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, T element) {
+	public void remove(long instanceId, T element) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void handleLocalRemoveAll(long instanceId) {
+	public void removeAll(long instanceId) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void handleLocalUpdate(long instanceId, T element) {
+	public void update(long instanceId, T element) {
 		// TODO Auto-generated method stub
 
 	}

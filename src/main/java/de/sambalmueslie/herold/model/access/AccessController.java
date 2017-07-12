@@ -57,43 +57,43 @@ public class AccessController<T extends DataModelElement> implements LocalModel<
 	}
 
 	@Override
-	public void handleLocalAdd(long instanceId, T element) {
+	public void add(long instanceId, T element) {
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot add element");
 
-		model.handleLocalAdd(instanceId, element);
+		model.add(instanceId, element);
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, long elementId) {
+	public void remove(long instanceId, long elementId) {
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove element");
 
-		model.handleLocalRemove(instanceId, elementId);
+		model.remove(instanceId, elementId);
 	}
 
 	@Override
-	public void handleLocalRemove(long instanceId, T element) {
+	public void remove(long instanceId, T element) {
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove element");
 
-		model.handleLocalRemove(instanceId, element);
+		model.remove(instanceId, element);
 	}
 
 	@Override
-	public void handleLocalRemoveAll(long instanceId) {
+	public void removeAll(long instanceId) {
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot remove all elements");
 
-		model.handleLocalRemoveAll(instanceId);
+		model.removeAll(instanceId);
 	}
 
 	@Override
-	public void handleLocalUpdate(long instanceId, T element) {
+	public void update(long instanceId, T element) {
 		if (isWriteRestricted())
 			throw new WriteAccessException(operatorId, getElementType(), "Cannot update element");
 
-		model.handleLocalUpdate(instanceId, element);
+		model.update(instanceId, element);
 	}
 
 	@Override
