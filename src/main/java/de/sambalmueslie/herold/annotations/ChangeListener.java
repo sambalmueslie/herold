@@ -10,7 +10,7 @@ import de.sambalmueslie.herold.DataModelChangeListener;
 
 /**
  * Its possible to add a specific change listener for each field. Therefore you have to consider the method signature.
- * <code>handle[FieldName]Change(ElementReference, FormerValue) <code>
+ * <code>handle[FieldName]Change(ElementReference, FormerValue) </code>
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

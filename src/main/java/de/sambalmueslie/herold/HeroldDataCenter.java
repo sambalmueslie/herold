@@ -8,6 +8,8 @@ public interface HeroldDataCenter {
 	 *
 	 * @param elementType
 	 *            the type
+	 * @param <T>
+	 *            the element type
 	 */
 	<T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType);
 
@@ -18,6 +20,8 @@ public interface HeroldDataCenter {
 	 *            the type
 	 * @param operatorId
 	 *            the operator id
+	 * @param <T>
+	 *            the element type
 	 */
 	<T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType, String operatorId);
 
@@ -31,6 +35,8 @@ public interface HeroldDataCenter {
 	 *
 	 * @param elementType
 	 *            the element type
+	 * @param <T>
+	 *            the element type
 	 */
 	<T extends DataModelElement> void removeAllModel(Class<T> elementType);
 
@@ -41,6 +47,8 @@ public interface HeroldDataCenter {
 	 *            the type
 	 * @param model
 	 *            the model to remove
+	 * @param <T>
+	 *            the element type
 	 */
 	<T extends DataModelElement> void removeModel(Class<T> elementType, DataModel<T> model);
 }
