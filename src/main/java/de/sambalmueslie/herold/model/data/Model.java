@@ -1,4 +1,4 @@
-package de.sambalmueslie.herold.model;
+package de.sambalmueslie.herold.model.data;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,12 +16,13 @@ import org.apache.logging.log4j.Logger;
 
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.LocalModel;
 
-class Model<T extends DataModelElement> implements LocalModel<T> {
+public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	private static Logger logger = LogManager.getLogger(Model.class);
 
-	Model(Class<? extends T> implType) {
+	public Model(Class<? extends T> implType) {
 		this.implType = implType;
 	}
 
@@ -31,14 +32,9 @@ class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	@Override
-	public Optional<T> create() {
-		try {
-			final T instance = implType.newInstance();
-			return Optional.of(instance);
-		} catch (InstantiationException | IllegalAccessException e) {
-			logger.error("Cannot create instance of type{}", implType, e);
-			return Optional.empty();
-		}
+	public void dispose() {
+		data.clear();
+		listeners.clear();
 	}
 
 	@Override
@@ -144,11 +140,6 @@ class Model<T extends DataModelElement> implements LocalModel<T> {
 	@Override
 	public void unregister(long instanceId) {
 		listeners.remove(instanceId);
-	}
-
-	void dispose() {
-		data.clear();
-		listeners.clear();
 	}
 
 	private void notifyListeners(long instanceId, Consumer<DataModelChangeListener<T>> message) {

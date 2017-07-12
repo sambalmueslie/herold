@@ -7,11 +7,11 @@ import java.util.stream.Stream;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 
-interface LocalModel<T extends DataModelElement> {
+public interface LocalModel<T extends DataModelElement> {
 
 	boolean contains(long elementId);
 
-	Optional<T> create();
+	void dispose();
 
 	Optional<T> get(long elementId);
 

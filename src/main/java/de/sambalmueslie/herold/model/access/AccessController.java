@@ -1,4 +1,4 @@
-package de.sambalmueslie.herold.model;
+package de.sambalmueslie.herold.model.access;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,10 +13,12 @@ import de.sambalmueslie.herold.annotations.AllowedReader;
 import de.sambalmueslie.herold.annotations.AllowedWriter;
 import de.sambalmueslie.herold.exceptions.ReadAccessException;
 import de.sambalmueslie.herold.exceptions.WriteAccessException;
+import de.sambalmueslie.herold.model.LocalModel;
+import de.sambalmueslie.herold.util.AnnotationSpy;
 
-class ModelAccessController<T extends DataModelElement> implements LocalModel<T> {
+public class AccessController<T extends DataModelElement> implements LocalModel<T> {
 
-	ModelAccessController(String operatorId, LocalModel<T> model, Class<T> elementType) {
+	public AccessController(String operatorId, LocalModel<T> model, Class<T> elementType) {
 		this.operatorId = operatorId;
 		this.model = model;
 		this.elementType = elementType;
@@ -31,8 +33,10 @@ class ModelAccessController<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	@Override
-	public Optional<T> create() {
-		return model.create();
+	public void dispose() {
+		allowedReaders.clear();
+		allowedWriters.clear();
+		model.dispose();
 	}
 
 	@Override
@@ -129,14 +133,14 @@ class ModelAccessController<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	private void setup() {
-		final AllowedReader reader = elementType.getAnnotation(AllowedReader.class);
-		if (reader != null) {
-			allowedReaders = Arrays.stream(reader.value()).collect(Collectors.toSet());
+		final Optional<AllowedReader> reader = AnnotationSpy.findAnnotation(elementType, AllowedReader.class);
+		if (reader.isPresent()) {
+			allowedReaders = Arrays.stream(reader.get().value()).collect(Collectors.toSet());
 		}
 
-		final AllowedWriter writer = elementType.getAnnotation(AllowedWriter.class);
-		if (writer != null) {
-			allowedWriters = Arrays.stream(writer.value()).collect(Collectors.toSet());
+		final Optional<AllowedWriter> writer = AnnotationSpy.findAnnotation(elementType, AllowedWriter.class);
+		if (writer.isPresent()) {
+			allowedWriters = Arrays.stream(writer.get().value()).collect(Collectors.toSet());
 		}
 	}
 

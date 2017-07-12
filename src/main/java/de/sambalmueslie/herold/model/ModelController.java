@@ -9,6 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.access.AccessController;
+import de.sambalmueslie.herold.model.data.Model;
+import de.sambalmueslie.herold.model.instance.ModelInstance;
 
 class ModelController<T extends DataModelElement> {
 	private static Logger logger = LogManager.getLogger(ModelController.class);
@@ -25,7 +28,7 @@ class ModelController<T extends DataModelElement> {
 			createModel();
 		}
 
-		final ModelAccessController<T> accessController = new ModelAccessController<>(operatorId, model, elementType);
+		final AccessController<T> accessController = new AccessController<>(operatorId, model, elementType);
 		final ModelInstance<T> instance = new ModelInstance<>(accessController);
 		instances.put(instance.getId(), instance);
 		return Optional.of(instance);

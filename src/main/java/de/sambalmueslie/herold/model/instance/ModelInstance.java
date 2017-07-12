@@ -1,4 +1,4 @@
-package de.sambalmueslie.herold.model;
+package de.sambalmueslie.herold.model.instance;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -10,8 +10,9 @@ import java.util.stream.Stream;
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.LocalModel;
 
-class ModelInstance<T extends DataModelElement> implements DataModel<T> {
+public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	private class ModelChangesForwarder implements DataModelChangeListener<T> {
 
@@ -32,7 +33,7 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	}
 
-	ModelInstance(LocalModel<T> model) {
+	public ModelInstance(LocalModel<T> model) {
 		this.model = model;
 		instanceId = UUID.randomUUID().getLeastSignificantBits();
 
@@ -47,6 +48,11 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 	@Override
 	public boolean contains(long elementId) {
 		return model.contains(elementId);
+	}
+
+	public void dispose() {
+		model.unregister(instanceId);
+		changeListener.clear();
 	}
 
 	@Override
@@ -67,6 +73,10 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 	@Override
 	public Collection<T> getAll() {
 		return model.getAll();
+	}
+
+	public long getId() {
+		return instanceId;
 	}
 
 	@Override
@@ -127,15 +137,6 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 	@Override
 	public void update(T element) {
 		model.handleLocalUpdate(instanceId, element);
-	}
-
-	void dispose() {
-		model.unregister(instanceId);
-		changeListener.clear();
-	}
-
-	long getId() {
-		return instanceId;
 	}
 
 	private final List<DataModelChangeListener<T>> changeListener = new LinkedList<>();
