@@ -10,13 +10,13 @@ import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.annotations.ChangeListener;
 import de.sambalmueslie.herold.model.LocalModel;
+import de.sambalmueslie.herold.model.Metadata;
 import de.sambalmueslie.herold.util.AnnotationSpy;
 
 public class ChangeDetector<T extends DataModelElement> implements LocalModel<T> {
 
-	public ChangeDetector(LocalModel<T> model, Class<T> elementType) {
+	public ChangeDetector(LocalModel<T> model) {
 		this.model = model;
-		this.elementType = elementType;
 
 		setup();
 	}
@@ -40,6 +40,11 @@ public class ChangeDetector<T extends DataModelElement> implements LocalModel<T>
 	@Override
 	public Collection<T> getAll() {
 		return model.getAll();
+	}
+
+	@Override
+	public Metadata<T> getMetadata() {
+		return model.getMetadata();
 	}
 
 	@Override
@@ -107,13 +112,12 @@ public class ChangeDetector<T extends DataModelElement> implements LocalModel<T>
 	}
 
 	private void setup() {
-		final Optional<ChangeListener> result = AnnotationSpy.findAnnotation(elementType, ChangeListener.class);
+		final Optional<ChangeListener> result = AnnotationSpy.findAnnotation(getMetadata().getElementType(), ChangeListener.class);
 		if (result.isPresent()) {
 			specificListenerType = result.get().value();
 		}
 	}
 
-	private final Class<T> elementType;
 	private final LocalModel<T> model;
 	private final Map<Long, DataModelChangeListener<T>> specificListener = new LinkedHashMap<>();
 	private Class<?> specificListenerType;

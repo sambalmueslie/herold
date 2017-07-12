@@ -17,6 +17,8 @@ public interface LocalModel<T extends DataModelElement> {
 
 	Collection<T> getAll();
 
+	Metadata<T> getMetadata();
+
 	void handleLocalAdd(long instanceId, T element);
 
 	void handleLocalRemove(long instanceId, long elementId);
@@ -36,5 +38,4 @@ public interface LocalModel<T extends DataModelElement> {
 	Stream<T> stream();
 
 	void unregister(long instanceId);
-
 }

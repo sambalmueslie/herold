@@ -39,14 +39,14 @@ class DataCenter implements HeroldDataCenter {
 	public <T extends DataModelElement> Optional<DataModel<T>> createModel(Class<T> elementType, String operatorId) {
 		logger.debug("Create new model of type {} for operator {}", elementType, operatorId);
 
-		final Class<? extends T> implType = getImplementationType(elementType);
+		final Metadata<T> metadata = getMetadata(elementType);
 
-		if (!isValid(elementType, implType)) {
+		if (!isValid(metadata)) {
 			logger.error("Cannot create model of invalid type {}", elementType);
 			return Optional.empty();
 		}
 
-		final ModelController<T> controller = getController(elementType, implType);
+		final ModelController<T> controller = getController(metadata);
 		return controller.createNewInstance(operatorId);
 	}
 
@@ -56,7 +56,7 @@ class DataCenter implements HeroldDataCenter {
 
 		models.values().forEach(ModelController::dispose);
 		models.clear();
-		implTypeCache.clear();
+		metadataCache.clear();
 	}
 
 	@Override
@@ -64,13 +64,14 @@ class DataCenter implements HeroldDataCenter {
 		if (!models.containsKey(elementType)) return;
 
 		logger.debug("Create remove all model of type {}", elementType);
-		final Class<? extends T> implType = getImplementationType(elementType);
-		final ModelController<T> controller = getController(elementType, implType);
+		final Metadata<T> metadata = getMetadata(elementType);
+		final ModelController<T> controller = getController(metadata);
 		controller.removeAll();
 
 		controller.dispose();
-		models.remove(implType);
-		implTypeCache.remove(elementType);
+
+		models.remove(metadata.getElementImplType());
+		metadataCache.remove(elementType);
 	}
 
 	@Override
@@ -79,39 +80,41 @@ class DataCenter implements HeroldDataCenter {
 
 		logger.debug("Create remove model of type {}", elementType);
 
-		final Class<? extends T> implType = getImplementationType(elementType);
-		final ModelController<T> controller = getController(elementType, implType);
+		final Metadata<T> metadata = getMetadata(elementType);
+		final ModelController<T> controller = getController(metadata);
 		controller.remove(model);
 
 		if (controller.isUnused()) {
 			controller.dispose();
-			models.remove(implType);
-			implTypeCache.remove(elementType);
+			models.remove(metadata.getElementImplType());
+			metadataCache.remove(elementType);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataModelElement> ModelController<T> getController(Class<T> elementType, Class<? extends T> implType) {
+	private <T extends DataModelElement> ModelController<T> getController(Metadata<T> metadata) {
+		final Class<?> implType = metadata.getElementImplType();
 		ModelController<T> controller = (ModelController<T>) models.get(implType);
 		if (controller == null) {
-			controller = new ModelController<>(elementType, implType);
+			controller = new ModelController<>(metadata);
 			models.put(implType, controller);
 		}
 		return controller;
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataModelElement> Class<? extends T> getImplementationType(Class<T> elementType) {
-		if (implTypeCache.containsKey(elementType)) return (Class<? extends T>) implTypeCache.get(elementType);
+	private <T extends DataModelElement> Metadata<T> getMetadata(Class<T> elementType) {
+		if (metadataCache.containsKey(elementType)) return (Metadata<T>) metadataCache.get(elementType);
 
-		final ImplementationType annotation = elementType.getAnnotation(ImplementationType.class);
-
-		final Class<T> implType = annotation != null ? (Class<T>) annotation.value() : elementType;
-		implTypeCache.put(elementType, implType);
-		return implType;
+		final Metadata<T> metadata = new Metadata<>(elementType);
+		metadataCache.put(elementType, metadata);
+		return metadata;
 	}
 
-	private <T extends DataModelElement> boolean isValid(Class<T> elementType, Class<? extends T> implType) {
+	private <T extends DataModelElement> boolean isValid(Metadata<T> metadata) {
+		final Class<T> elementType = metadata.getElementType();
+		final Class<? extends T> implType = metadata.getElementImplType();
+
 		if (implType.isInterface()) {
 			logger.error("Element type {} must define annotation {} or be an instanceable type.", elementType, ImplementationType.class);
 			return false;
@@ -143,7 +146,7 @@ class DataCenter implements HeroldDataCenter {
 	/** the operator id. */
 	private final String globalOperatorId;
 
-	private final Map<Class<?>, Class<?>> implTypeCache = new HashMap<>();
+	private final Map<Class<?>, Metadata<?>> metadataCache = new HashMap<>();
 
 	/** the models by type. */
 	private final Map<Class<?>, ModelController<?>> models = new LinkedHashMap<>();

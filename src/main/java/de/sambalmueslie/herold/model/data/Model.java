@@ -17,13 +17,14 @@ import org.apache.logging.log4j.Logger;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.model.LocalModel;
+import de.sambalmueslie.herold.model.Metadata;
 
 public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	private static Logger logger = LogManager.getLogger(Model.class);
 
-	public Model(Class<? extends T> implType) {
-		this.implType = implType;
+	public Model(Metadata<T> metadata) {
+		this.metadata = metadata;
 	}
 
 	@Override
@@ -46,6 +47,11 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	@Override
 	public Collection<T> getAll() {
 		return Collections.unmodifiableCollection(data.values());
+	}
+
+	@Override
+	public Metadata<T> getMetadata() {
+		return metadata;
 	}
 
 	@Override
@@ -147,9 +153,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	}
 
 	private final Map<Long, T> data = new LinkedHashMap<>();
-	/** the implementation type. */
-	private final Class<? extends T> implType;
-
 	private final Map<Long, DataModelChangeListener<T>> listeners = new LinkedHashMap<>();
+	private final Metadata<T> metadata;
 
 }
