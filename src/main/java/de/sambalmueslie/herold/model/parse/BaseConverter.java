@@ -79,6 +79,7 @@ public abstract class BaseConverter<T extends DataModelElement> implements Eleme
 				final Field f = fields.get(name);
 				if (f == null) {
 					logger.warn("Ignoring value {} for type {} cause no suitable field was found", name, elementType);
+					continue;
 				}
 
 				final String value = val.getValue();
