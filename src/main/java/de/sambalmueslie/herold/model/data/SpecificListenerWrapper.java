@@ -12,6 +12,7 @@ class SpecificListenerWrapper<T extends DataModelElement> implements DataModelCh
 	SpecificListenerWrapper(DataModelChangeListener<T> listener, ElementCache cache, ElementConverter<T> converter) {
 		this.listener = listener;
 		this.cache = cache;
+		this.converter = converter;
 	}
 
 	@Override
@@ -64,7 +65,7 @@ class SpecificListenerWrapper<T extends DataModelElement> implements DataModelCh
 	}
 
 	private final ElementCache cache;
-	private ElementConverter<T> converter;
+	private final ElementConverter<T> converter;
 
 	private final DataModelChangeListener<T> listener;
 
