@@ -3,6 +3,8 @@ package de.sambalmueslie.herold;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import de.sambalmueslie.herold.annotations.Key;
+
 /**
  * Base implementation for the {@link DataModelElement}.
  */
@@ -41,6 +43,7 @@ public abstract class BaseDataModelElement implements DataModelElement {
 	}
 
 	/** the id. */
+	@Key
 	private long id;
 
 }

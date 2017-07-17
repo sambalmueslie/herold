@@ -16,6 +16,8 @@ import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.model.LocalModel;
 import de.sambalmueslie.herold.model.Metadata;
+import de.sambalmueslie.herold.model.parse.ElementConverter;
+import de.sambalmueslie.herold.model.parse.JsonConverter;
 
 public class Model<T extends DataModelElement> implements LocalModel<T> {
 
@@ -24,7 +26,8 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	public Model(Metadata<T> metadata) {
 		this.metadata = metadata;
 
-		listenerMgr = new ListenerMgr<>();
+		converter = new JsonConverter<>(metadata.getElementImplType());
+		listenerMgr = new ListenerMgr<>(metadata, cache, converter);
 	}
 
 	@Override
@@ -55,6 +58,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 	@Override
 	public void dispose() {
 		data.clear();
+		cache.clear();
 		listenerMgr.dispose();
 	}
 
@@ -148,6 +152,10 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 		listenerMgr.notifyElementUpdated(instanceId, element);
 	}
 
+	private final ElementCache cache = new ElementCache();
+
+	/** the {@link ElementConverter}. */
+	private final ElementConverter<T> converter;
 	private final Map<Long, T> data = new LinkedHashMap<>();
 	private final ListenerMgr<T> listenerMgr;
 	private final Metadata<T> metadata;

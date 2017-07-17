@@ -1,14 +1,16 @@
 package de.sambalmueslie.herold.model.data;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.Metadata;
+import de.sambalmueslie.herold.model.parse.ElementConverter;
 
 /**
  * @param <T>
@@ -27,8 +29,11 @@ class ListenerMgr<T extends DataModelElement> {
 
 		void register(DataModelChangeListener<T> listener) {
 			if (listener == null) return;
-			if (listeners.contains(listener)) return;
-			listeners.add(listener);
+			if (isSpecificListener(listener)) {
+				listeners.add(new SpecificListenerWrapper<>(listener, cache, converter));
+			} else {
+				listeners.add(listener);
+			}
 		}
 
 		void unregister(DataModelChangeListener<T> listener) {
@@ -36,11 +41,22 @@ class ListenerMgr<T extends DataModelElement> {
 			listeners.remove(listener);
 		}
 
-		private final List<DataModelChangeListener<T>> listeners = new LinkedList<>();
+		private boolean isSpecificListener(DataModelChangeListener<T> listener) {
+			return specificListenerType.isAssignableFrom(listener.getClass());
+		}
+
+		private final Set<DataModelChangeListener<T>> listeners = new LinkedHashSet<>();
+
+	}
+
+	ListenerMgr(Metadata<T> metadata, ElementCache cache, ElementConverter<T> converter) {
+		this.specificListenerType = metadata.getSpecificListenerType();
+		this.cache = cache;
+		this.converter = converter;
 	}
 
 	void dispose() {
-
+		instances.clear();
 	}
 
 	void notifyElementAdded(long instanceId, T element) {
@@ -87,7 +103,10 @@ class ListenerMgr<T extends DataModelElement> {
 		instances.entrySet().stream().filter(e -> e.getKey() != instanceId).map(Entry::getValue).forEach(i -> i.notifyListeners(message));
 	}
 
+	private final ElementCache cache;
+	private final ElementConverter<T> converter;
 	/** the instances by id. */
 	private final Map<Long, Instance> instances = new HashMap<>();
+	private final Class<?> specificListenerType;
 
 }
