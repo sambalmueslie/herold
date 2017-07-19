@@ -54,7 +54,7 @@ class DataMgr<T extends DataModelElement> {
 			return;
 		}
 		final long elementId = element.getId();
-		if (data.containsKey(elementId)) {
+		if (!data.containsKey(elementId)) {
 			handleInsertAdd(instanceId, element);
 		} else {
 			handleInsertUpdate(instanceId, element);
@@ -94,7 +94,7 @@ class DataMgr<T extends DataModelElement> {
 			Field f = fieldCache.get(fieldName);
 			if (f == null) {
 				try {
-					f = elementImplType.getField(fieldName);
+					f = elementImplType.getDeclaredField(fieldName);
 					f.setAccessible(true);
 					fieldCache.put(fieldName, f);
 				} catch (NoSuchFieldException | SecurityException e1) {
@@ -127,7 +127,7 @@ class DataMgr<T extends DataModelElement> {
 		// added and changed values
 		c.getValues().entrySet().stream()
 				.filter(e -> f.contains(e.getKey()))
-				.filter(e -> StringUtils.equals(f.get(e.getKey()).get(), e.getValue()))
+				.filter(e -> !StringUtils.equals(f.get(e.getKey()).get(), e.getValue()))
 				.forEach(e -> element.set(e.getKey(), f.get(e.getKey()).get()));
 
 		// removed values
@@ -143,6 +143,11 @@ class DataMgr<T extends DataModelElement> {
 		logger.debug("Insert new element {}", element);
 		data.put(element.getId(), element);
 		dataCache.put(element.getId(), element);
+
+		final Optional<Element> current = converter.convert(element);
+		current.ifPresent(elementCache::update);
+		updateDataCache(current);
+
 		listenerMgr.notifyElementAdded(instanceId, element);
 	}
 
@@ -157,8 +162,18 @@ class DataMgr<T extends DataModelElement> {
 
 		current.ifPresent(elementCache::update);
 		final Map<String, Object> changes = getChanges(elementId, diff);
-		dataCache.put(elementId, element);
+		updateDataCache(current);
 		listenerMgr.notifyElementUpdated(instanceId, element, changes);
+	}
+
+	private void updateDataCache(Optional<Element> content) {
+		if (!content.isPresent()) return;
+
+		final Element element = content.get();
+		final long elementId = element.getId();
+
+		final Optional<T> obj = converter.convert(element);
+		obj.ifPresent(o -> dataCache.put(elementId, o));
 	}
 
 	/** the {@link ElementConverter}. */

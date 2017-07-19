@@ -1,10 +1,10 @@
 package de.sambalmueslie.herold.model.parse;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.annotations.Key;
 import de.sambalmueslie.herold.annotations.Value;
+import de.sambalmueslie.herold.util.ReflectionUtils;
 
 public abstract class BaseConverter<T extends DataModelElement> implements ElementConverter<T> {
 
@@ -22,8 +23,11 @@ public abstract class BaseConverter<T extends DataModelElement> implements Eleme
 	protected BaseConverter(Class<? extends T> elementType) {
 		this.elementType = elementType;
 
-		key = Arrays.stream(elementType.getDeclaredFields()).filter(f -> f.isAnnotationPresent(Key.class)).findAny().get();
-		fields = Arrays.stream(elementType.getDeclaredFields()).filter(f -> f.isAnnotationPresent(Value.class)).collect(Collectors.toMap(Field::getName, Function.identity()));
+		final Set<Field> elementFields = ReflectionUtils.getFields(elementType);
+
+		key = elementFields.stream().filter(f -> f.isAnnotationPresent(Key.class)).findAny().get();
+		key.setAccessible(true);
+		fields = elementFields.stream().filter(f -> f.isAnnotationPresent(Value.class)).collect(Collectors.toMap(Field::getName, Function.identity()));
 		fields.values().forEach(f -> f.setAccessible(true));
 	}
 
@@ -84,13 +88,13 @@ public abstract class BaseConverter<T extends DataModelElement> implements Eleme
 
 				final String value = val.getValue();
 				final Object fieldVal = stringToObj(value, f.getType());
-				f.set(element, fieldVal);
+				f.set(obj, fieldVal);
 
 			}
-		} catch (final IllegalAccessException e) {
+		} catch (final IllegalAccessException | IllegalArgumentException e) {
 			logger.error("Cannot merge object for type " + elementType, e);
 		}
-		return Optional.empty();
+		return Optional.of(obj);
 	}
 
 	/**
