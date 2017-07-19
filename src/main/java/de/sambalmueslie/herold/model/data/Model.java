@@ -2,9 +2,7 @@ package de.sambalmueslie.herold.model.data;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -16,8 +14,6 @@ import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 import de.sambalmueslie.herold.model.LocalModel;
 import de.sambalmueslie.herold.model.Metadata;
-import de.sambalmueslie.herold.model.parse.ElementConverter;
-import de.sambalmueslie.herold.model.parse.JsonConverter;
 
 public class Model<T extends DataModelElement> implements LocalModel<T> {
 
@@ -25,52 +21,34 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	public Model(Metadata<T> metadata) {
 		this.metadata = metadata;
-
-		converter = new JsonConverter<>(metadata.getElementImplType());
-		listenerMgr = new ListenerMgr<>(metadata, cache, converter);
+		listenerMgr = new ListenerMgr<>(metadata);
+		dataMgr = new DataMgr<>(metadata, listenerMgr);
 	}
 
 	@Override
 	public void add(long instanceId, T element) {
-		if (element == null) {
-			logger.error("Cannot local add null element");
-			return;
-		}
-
-		final long elementId = element.getId();
-		if (data.containsKey(elementId)) {
-			update(instanceId, element);
-			return;
-		}
-
-		logger.debug("Localy add new element {}", element);
-		data.put(elementId, element);
-
-		listenerMgr.notifyElementAdded(instanceId, element);
-
+		dataMgr.insert(instanceId, element);
 	}
 
 	@Override
 	public boolean contains(long elementId) {
-		return data.containsKey(elementId);
+		return dataMgr.contains(elementId);
 	}
 
 	@Override
 	public void dispose() {
-		data.clear();
-		cache.clear();
+		dataMgr.clear();
 		listenerMgr.dispose();
 	}
 
 	@Override
 	public Optional<T> get(long elementId) {
-		final T element = data.get(elementId);
-		return Optional.ofNullable(element);
+		return dataMgr.get(elementId);
 	}
 
 	@Override
 	public Collection<T> getAll() {
-		return Collections.unmodifiableCollection(data.values());
+		return Collections.unmodifiableCollection(dataMgr.getAll());
 	}
 
 	@Override
@@ -80,7 +58,7 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	@Override
 	public boolean isEmpty() {
-		return data.isEmpty();
+		return dataMgr.isEmpty();
 	}
 
 	@Override
@@ -90,16 +68,13 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	@Override
 	public void remove(long instanceId, long elementId) {
-		final T element = data.remove(elementId);
-
-		if (element == null) return;
-
-		logger.debug("Localy remove element {}", element);
-		listenerMgr.notifyElementRemoved(instanceId, element);
+		final Optional<T> element = dataMgr.get(elementId);
+		element.ifPresent(e -> this.remove(instanceId, e));
 	}
 
 	@Override
 	public void remove(long instanceId, T element) {
+		dataMgr.remove(instanceId, element);
 		if (element == null) {
 			logger.error("Cannot local remove null element");
 			return;
@@ -109,18 +84,18 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	@Override
 	public void removeAll(long instanceId) {
-		final Set<Long> copy = new LinkedHashSet<>(data.keySet());
-		copy.forEach(id -> remove(instanceId, id));
+		final Set<T> copy = new LinkedHashSet<>(dataMgr.getAll());
+		copy.forEach(e -> remove(instanceId, e));
 	}
 
 	@Override
 	public int size() {
-		return data.size();
+		return dataMgr.size();
 	}
 
 	@Override
 	public Stream<T> stream() {
-		return data.values().stream();
+		return dataMgr.stream();
 	}
 
 	@Override
@@ -135,29 +110,14 @@ public class Model<T extends DataModelElement> implements LocalModel<T> {
 
 	@Override
 	public void update(long instanceId, T element) {
-		if (element == null) {
-			logger.error("Cannot local update null element");
-			return;
-		}
-
-		final long elementId = element.getId();
-		if (!data.containsKey(elementId)) {
-			add(instanceId, element);
-			return;
-		}
-
-		logger.debug("Localy update element {}", element);
-		data.put(elementId, element);
-
-		listenerMgr.notifyElementUpdated(instanceId, element);
+		dataMgr.insert(instanceId, element);
 	}
 
-	private final ElementCache cache = new ElementCache();
-
-	/** the {@link ElementConverter}. */
-	private final ElementConverter<T> converter;
-	private final Map<Long, T> data = new LinkedHashMap<>();
+	/** the {@link DataMgr}. */
+	private final DataMgr<T> dataMgr;
+	/** the {@link ListenerMgr}. */
 	private final ListenerMgr<T> listenerMgr;
+	/** the {@link Metadata}. */
 	private final Metadata<T> metadata;
 
 }
