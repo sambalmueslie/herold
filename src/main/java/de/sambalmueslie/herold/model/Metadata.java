@@ -10,8 +10,11 @@ import de.sambalmueslie.herold.util.AnnotationSpy;
 
 public class Metadata<T extends DataModelElement> {
 
+	@SuppressWarnings("unchecked")
 	Metadata(Class<T> elementType) {
 		this.elementType = elementType;
+
+		genericListenerType = (Class<DataModelChangeListener<T>>) (Object) DataModelChangeListener.class;
 	}
 
 	public Class<? extends T> getElementImplType() {
@@ -38,13 +41,15 @@ public class Metadata<T extends DataModelElement> {
 		return result.isPresent() ? (Class<T>) result.get().value() : elementType;
 	}
 
-	@SuppressWarnings("unchecked")
-	private <S extends DataModelChangeListener<? extends T>> Class<S> getListenerType() {
+	@SuppressWarnings({ "unchecked" })
+	private Class<? extends DataModelChangeListener<? extends T>> getListenerType() {
 		final Optional<ChangeListener> result = AnnotationSpy.findAnnotation(elementType, ChangeListener.class);
-		return result.isPresent() ? (Class<S>) result.get().value() : (Class<S>) DataModelChangeListener.class;
+
+		return result.isPresent() ? (Class<DataModelChangeListener<T>>) result.get().value() : genericListenerType;
 	}
 
 	private final Class<T> elementType;
+	private final Class<DataModelChangeListener<T>> genericListenerType;
 	private Class<? extends T> implType;
 	private Class<? extends DataModelChangeListener<? extends T>> specificListenerType;
 }
