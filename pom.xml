@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.sambalmueslie</groupId>
 	<artifactId>herold</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.2</version>
 	<name>Herold Data Center</name>
 	<description>Herold is a simple model based data distribution library.</description>
 	<url>http://www.sambalmueslie.de</url>
