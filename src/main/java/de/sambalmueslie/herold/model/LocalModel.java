@@ -7,34 +7,37 @@ import java.util.stream.Stream;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
 
-interface LocalModel<T extends DataModelElement> {
+public interface LocalModel<T extends DataModelElement> {
+
+	void add(long instanceId, T element);
 
 	boolean contains(long elementId);
 
-	Optional<T> create();
+	void dispose();
 
 	Optional<T> get(long elementId);
 
 	Collection<T> getAll();
 
-	void handleLocalAdd(long instanceId, T element);
-
-	void handleLocalRemove(long instanceId, long elementId);
-
-	void handleLocalRemove(long instanceId, T element);
-
-	void handleLocalRemoveAll(long instanceId);
-
-	void handleLocalUpdate(long instanceId, T element);
+	Metadata<T> getMetadata();
 
 	boolean isEmpty();
 
 	void register(long instanceId, DataModelChangeListener<T> listener);
 
+	void remove(long instanceId, long elementId);
+
+	void remove(long instanceId, T element);
+
+	void removeAll(long instanceId);
+
 	int size();
 
 	Stream<T> stream();
 
-	void unregister(long instanceId);
+	void unregister(long instanceId, DataModelChangeListener<T> listener);
 
+	void unregisterAll(long instanceId);
+
+	void update(long instanceId, T element);
 }

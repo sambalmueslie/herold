@@ -9,30 +9,32 @@ import org.apache.logging.log4j.Logger;
 
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.access.AccessController;
+import de.sambalmueslie.herold.model.data.Model;
+import de.sambalmueslie.herold.model.instance.ModelInstance;
 
 class ModelController<T extends DataModelElement> {
 	private static Logger logger = LogManager.getLogger(ModelController.class);
 
-	ModelController(Class<T> elementType, Class<? extends T> implType) {
-		this.elementType = elementType;
-		this.implType = implType;
+	ModelController(Metadata<T> metadata) {
+		this.metadata = metadata;
 	}
 
 	Optional<DataModel<T>> createNewInstance(String operatorId) {
-		logger.debug("Create new instance for type {}", elementType);
+		logger.debug("Create new instance for type {}", metadata.getElementType());
 
 		if (model == null) {
 			createModel();
 		}
 
-		final ModelAccessController<T> accessController = new ModelAccessController<>(operatorId, model, elementType);
+		final AccessController<T> accessController = new AccessController<>(operatorId, model);
 		final ModelInstance<T> instance = new ModelInstance<>(accessController);
 		instances.put(instance.getId(), instance);
 		return Optional.of(instance);
 	}
 
 	void dispose() {
-		logger.debug("Dispose model {}", elementType);
+		logger.debug("Dispose model {}", metadata.getElementType());
 		removeAll();
 	}
 
@@ -48,7 +50,7 @@ class ModelController<T extends DataModelElement> {
 
 		if (!instances.containsKey(instanceId)) return;
 
-		logger.debug("Remove instance for type {}", elementType);
+		logger.debug("Remove instance for type {}", metadata.getElementType());
 		instances.remove(instanceId);
 		instance.dispose();
 
@@ -59,7 +61,7 @@ class ModelController<T extends DataModelElement> {
 	}
 
 	void removeAll() {
-		logger.debug("Remove all model instances for type {}", elementType);
+		logger.debug("Remove all model instances for type {}", metadata.getElementType());
 		instances.values().forEach(ModelInstance::dispose);
 		instances.clear();
 
@@ -70,12 +72,11 @@ class ModelController<T extends DataModelElement> {
 	}
 
 	private void createModel() {
-		model = new Model<>(implType);
+		model = new Model<>(metadata);
 	}
 
-	private final Class<T> elementType;
-	private final Class<? extends T> implType;
 	private final Map<Long, ModelInstance<T>> instances = new LinkedHashMap<>();
-	private Model<T> model;
+	private final Metadata<T> metadata;
+	private LocalModel<T> model;
 
 }
