@@ -1,4 +1,4 @@
 image: tomsontom/oracle-java8-mvn:latest
  
 build:
-  script: "mvn clean install sonar:sonar -B"
+  script: "mvn clean install -B -DskipGPG=true"

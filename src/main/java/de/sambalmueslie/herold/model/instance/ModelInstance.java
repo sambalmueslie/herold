@@ -1,8 +1,6 @@
-package de.sambalmueslie.herold.model;
+package de.sambalmueslie.herold.model.instance;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -10,43 +8,27 @@ import java.util.stream.Stream;
 import de.sambalmueslie.herold.DataModel;
 import de.sambalmueslie.herold.DataModelChangeListener;
 import de.sambalmueslie.herold.DataModelElement;
+import de.sambalmueslie.herold.model.LocalModel;
 
-class ModelInstance<T extends DataModelElement> implements DataModel<T> {
+public class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
-	private class ModelChangesForwarder implements DataModelChangeListener<T> {
-
-		@Override
-		public void handleElementAdded(T element) {
-			changeListener.forEach(l -> l.handleElementAdded(element));
-		}
-
-		@Override
-		public void handleElementChanged(T element) {
-			changeListener.forEach(l -> l.handleElementChanged(element));
-		}
-
-		@Override
-		public void handleElementRemoved(T element) {
-			changeListener.forEach(l -> l.handleElementRemoved(element));
-		}
-
-	}
-
-	ModelInstance(Model<T> model) {
+	public ModelInstance(LocalModel<T> model) {
 		this.model = model;
 		instanceId = UUID.randomUUID().getLeastSignificantBits();
-
-		model.register(instanceId, new ModelChangesForwarder());
 	}
 
 	@Override
 	public void add(T element) {
-		model.handleLocalAdd(instanceId, element);
+		model.add(instanceId, element);
 	}
 
 	@Override
 	public boolean contains(long elementId) {
 		return model.contains(elementId);
+	}
+
+	public void dispose() {
+		model.unregisterAll(instanceId);
 	}
 
 	@Override
@@ -69,6 +51,10 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 		return model.getAll();
 	}
 
+	public long getId() {
+		return instanceId;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -84,27 +70,22 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void register(DataModelChangeListener<T> listener) {
-		if (listener == null) return;
-		if (changeListener.contains(listener)) return;
-
-		changeListener.add(listener);
-
-		model.stream().forEach(listener::handleElementAdded);
+		model.register(instanceId, listener);
 	}
 
 	@Override
 	public void remove(long elementId) {
-		model.handleLocalRemove(instanceId, elementId);
+		model.remove(instanceId, elementId);
 	}
 
 	@Override
 	public void remove(T element) {
-		model.handleLocalRemove(instanceId, element);
+		model.remove(instanceId, element);
 	}
 
 	@Override
 	public void removeAll() {
-		model.handleLocalRemoveAll(instanceId);
+		model.removeAll(instanceId);
 	}
 
 	@Override
@@ -119,27 +100,15 @@ class ModelInstance<T extends DataModelElement> implements DataModel<T> {
 
 	@Override
 	public void unregister(DataModelChangeListener<T> listener) {
-		if (listener == null) return;
-
-		changeListener.remove(listener);
+		model.unregister(instanceId, listener);
 	}
 
 	@Override
 	public void update(T element) {
-		model.handleLocalUpdate(instanceId, element);
+		model.update(instanceId, element);
 	}
 
-	void dispose() {
-		model.unregister(instanceId);
-		changeListener.clear();
-	}
-
-	long getId() {
-		return instanceId;
-	}
-
-	private final List<DataModelChangeListener<T>> changeListener = new LinkedList<>();
 	private final long instanceId;
-	private final Model<T> model;
+	private final LocalModel<T> model;
 
 }
